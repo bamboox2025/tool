@@ -9,28 +9,41 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # 步骤 1：拉取 peter-zx/hetong_20251027 到 ./hetong 目录
       - name: Checkout Hetong Repo
         uses: actions/checkout@v4
         with:
           repository: peter-zx/hetong_20251027
           ref: main
-          token: ${{ secrets.PAT_TOKEN }}  # ← 修复：添加 token
+          token: ${{ secrets.PAT_TOKEN }}
           path: hetong
 
+      # 步骤 2：进入 hetong 目录（关键！）
+      - name: Change to Hetong Directory
+        run: |
+          cd hetong
+          pwd
+          ls -la
+
+      # 步骤 3：安装 Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      # 步骤 4：安装依赖（在 hetong 目录）
       - name: Install Dependencies
         run: |
           cd hetong
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # 步骤 5：部署到 Vercel（指定工作目录）
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           working-directory: ./hetong
           vercel-args: '--prod'
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
