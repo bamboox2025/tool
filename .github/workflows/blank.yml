@@ -1,34 +1,40 @@
-name: CI/CD Pipeline
+name: Deploy Hetong Flask App to Vercel
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:  # 手动触发
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Hetong Repo (Cross-Repo)
         uses: actions/checkout@v4
+        with:
+          repository: peter-zx/hetong_20251027  # 拉取您的 hetong 仓库
+          ref: main  # 分支
+          token: ${{ secrets.PAT_TOKEN }}  # PAT 认证跨仓库
+          path: hetong  # 克隆到 hetong 子目录
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11'  # Flask 兼容
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
+          cd hetong
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install -r requirements.txt  # 从 hetong README
 
-      - name: Run tests (optional)
-        run: |
-          echo "Add your tests here"
-          # python -m pytest
-
-      - name: Deploy to Railway / Render / Vercel
-        run: |
-          echo "Deploy script here"
-          # 示例：railway up
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25  # Vercel 官方 Action
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}  # Vercel Token
+          vercel-org-id: ${{ secrets.ORG_ID }}  # 可选，从 Vercel Dashboard
+          vercel-project-id: ${{ secrets.PROJECT_ID }}  # 可选，预创建项目 ID
+          working-directory: ./hetong  # 项目目录
+          vercel-args: '--prod'  # 生产部署
