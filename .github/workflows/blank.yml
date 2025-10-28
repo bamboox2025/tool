@@ -14,10 +14,10 @@ jobs:
         with:
           repository: peter-zx/hetong_20251027
           ref: main
-          token: ${{ secrets.PAT_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}        # ← 正确：用名称 PAT_TOKEN
           path: hetong
 
-      - name: Change to Project Directory
+      - name: Enter Project Directory
         run: |
           cd hetong
           pwd
@@ -37,6 +37,6 @@ jobs:
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}   # ← 正确：用名称 VERCEL_TOKEN
           working-directory: ./hetong
           vercel-args: '--prod'
