@@ -9,6 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # 步骤 1：拉取 Hetong 仓库，并确保完整克隆（深度克隆）
       - name: Checkout Hetong Repo
         uses: actions/checkout@v4
         with:
@@ -16,32 +17,27 @@ jobs:
           ref: main
           token: ${{ secrets.PAT_TOKEN }}
           path: hetong
-          fetch-depth: 0
+          fetch-depth: 0  # 确保完整克隆仓库
 
-      - name: Initialize Git in Subdirectory
-        run: |
-          cd hetong
-          git init
-          git remote add origin https://github.com/peter-zx/hetong_20251027.git
-          git fetch origin
-          git checkout main
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-
+      # 步骤 2：安装 Python 环境
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      # 步骤 3：安装依赖
       - name: Install Dependencies
         run: |
           cd hetong
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # 步骤 4：部署到 Vercel
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           working-directory: ./hetong
           vercel-args: '--prod'
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
