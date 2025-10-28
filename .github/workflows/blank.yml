@@ -1,40 +1,54 @@
-name: Deploy Hetong Flask App to Vercel
+name: Deploy Hetong Flask App to Vercel with Tailscale
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:  # 手动触发
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Hetong Repo (Cross-Repo)
+      - name: Checkout Hetong Repo
         uses: actions/checkout@v4
         with:
-          repository: peter-zx/hetong_20251027  # 拉取您的 hetong 仓库
-          ref: main  # 分支
-          token: ${{ secrets.PAT_TOKEN }}  # PAT 认证跨仓库
-          path: hetong  # 克隆到 hetong 子目录
+          repository: peter-zx/hetong_20251027
+          ref: main
+          token: ${{ secrets.PAT_TOKEN }}
+          path: hetong
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  # Flask 兼容
+          python-version: '3.11'
 
       - name: Install Dependencies
         run: |
           cd hetong
           python -m pip install --upgrade pip
-          pip install -r requirements.txt  # 从 hetong README
+          pip install -r requirements.txt
+
+      # 新增：加入 Tailscale 网络（保护访问）
+      - name: Install Tailscale
+        run: |
+          curl -fsSL https://tailscale.com/install.sh | sh
+          sudo tailscale up --authkey=${{ secrets.TAILSCALE_AUTH_KEY }} --accept-routes
+
+      - name: Test Tailscale Connection (Optional)
+        run: |
+          tailscale status  # 检查网络状态
+          # 示例：ping 您的私有服务器 IP
 
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25  # Vercel 官方 Action
+        uses: amondnet/vercel-action@v25
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}  # Vercel Token
-          vercel-org-id: ${{ secrets.ORG_ID }}  # 可选，从 Vercel Dashboard
-          vercel-project-id: ${{ secrets.PROJECT_ID }}  # 可选，预创建项目 ID
-          working-directory: ./hetong  # 项目目录
-          vercel-args: '--prod'  # 生产部署
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          working-directory: ./hetong
+          vercel-args: '--prod'
+
+      - name: Cleanup Tailscale
+        if: always()
+        run: |
+          sudo tailscale down  # 退出网络
