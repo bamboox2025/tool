@@ -1,4 +1,4 @@
-name: Deploy Hetong Flask App to Vercel with Tailscale
+name: Deploy Hetong Flask to Vercel
 
 on:
   push:
@@ -28,27 +28,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 新增：加入 Tailscale 网络（保护访问）
-      - name: Install Tailscale
-        run: |
-          curl -fsSL https://tailscale.com/install.sh | sh
-          sudo tailscale up --authkey=${{ secrets.TAILSCALE_AUTH_KEY }} --accept-routes
-
-      - name: Test Tailscale Connection (Optional)
-        run: |
-          tailscale status  # 检查网络状态
-          # 示例：ping 您的私有服务器 IP
-
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.ORG_ID }}
-          vercel-project-id: ${{ secrets.PROJECT_ID }}
           working-directory: ./hetong
           vercel-args: '--prod'
-
-      - name: Cleanup Tailscale
-        if: always()
-        run: |
-          sudo tailscale down  # 退出网络
