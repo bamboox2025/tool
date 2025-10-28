@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. 拉取完整 Git 历史（修复 git log 错误）
+      # 步骤 1：拉取 peter-zx/hetong_20251027 到 ./hetong 目录（深度克隆）
       - name: Checkout Hetong Repo
         uses: actions/checkout@v4
         with:
@@ -17,34 +17,27 @@ jobs:
           ref: main
           token: ${{ secrets.PAT_TOKEN }}
           path: hetong
-          fetch-depth: 0  # ← 关键修复：拉取全 Git 历史，初始化 .git
+          fetch-depth: 0  # 允许完整克隆仓库，包括所有提交历史
 
-      # 2. 验证目录（可选，调试用）
-      - name: Verify Git Repository
-        run: |
-          cd hetong
-          pwd
-          ls -la
-          git status  # ← 测试 Git 是否正常
-          git log -1 --pretty=format:%B  # ← 测试 git log
-
-      # 3. 安装 Python
+      # 步骤 2：安装 Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # 4. 安装依赖
+      # 步骤 3：安装依赖（在 hetong 目录）
       - name: Install Dependencies
         run: |
           cd hetong
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 5. 部署到 Vercel（现在 Git 可用）
+      # 步骤 4：部署到 Vercel（指定工作目录）
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           working-directory: ./hetong
           vercel-args: '--prod'
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
